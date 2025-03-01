@@ -3,9 +3,9 @@ sequence_length: 30
 alpha_realized: 1
 alpha_unrealized: 0
 beta_reward: 1
-total_timesteps: 3000000
+total_timesteps: 10000000
 model_name: crypto_ppo
-n_env: 10
+n_env: 30
 data:
-    train: train_short.csv
+    train: train.csv
     test: test.csv

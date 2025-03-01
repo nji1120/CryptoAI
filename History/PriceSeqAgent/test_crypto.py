@@ -31,18 +31,11 @@ def test_env(env:CryptoEnv, policy:PPO, n_test:int=1, save_path:Path=None):
             )
             obs, reward, done,_,info=env.step(action)
 
-            obs_history.append(obs[:5])
+            obs_history.append(obs[-8:-3])
             reward_history.append(reward)
             realized_pnl_rate_history.append(
                 env.agent.cumlative_realized_pnl_rate
             )
-
-            # obs_history.append(obs[0][:5])
-            # reward_history.append(reward[0])
-            # realized_pnl_rate_history.append(
-            #     # env..agent.cumlative_realized_pnl_rate
-            #     0
-            # )
 
         results.append({
             "i": i_test,
@@ -79,13 +72,13 @@ def visualize_history(
     realized_pnl_rate_array = np.array(realized_pnl_rate_history)
 
     # Plot OHLCV data
-    fig, axs=plt.subplots(4, 1, figsize=(6,8))
+    fig, axs=plt.subplots(3, 1, figsize=(6,6))
 
     # Plot Open, High, Low, Close
-    axs[0].plot(obs_array[:, 0], label='Open', color='blue')
-    axs[0].plot(obs_array[:, 1], label='High', color='green')
-    axs[0].plot(obs_array[:, 2], label='Low', color='red')
-    axs[0].plot(obs_array[:, 3], label='Close', color='orange')
+    axs[0].plot(obs_array[:, 0], label='Open', color='blue', alpha=0.3)
+    axs[0].plot(obs_array[:, 1], label='High', color='green', alpha=0.3)
+    axs[0].plot(obs_array[:, 2], label='Low', color='red', alpha=0.3)
+    axs[0].plot(obs_array[:, 3], label='Close', color='orange', alpha=1)
     axs[0].set_title('OHLC Data')
     axs[0].set_ylabel('Price')
     axs[0].legend()
@@ -102,25 +95,26 @@ def visualize_history(
     labels=["Long", "Short", "Close", "Stay"]
     for i_action in range(4):
         idx=np.where(np.array(action_history)==i_action)[0]
-        axs[2].plot(idx, i_action*np.ones(len(idx)), markers[i_action], label=labels[i_action], color=colors[i_action])
-    axs[2].set_title('Action History')
-    axs[2].set_ylabel('Action Index')
-    axs[2].set_yticks(ticks=[0, 1, 2, 3], labels=['Long', 'Short', 'Close', 'Stay'])
-    axs[2].legend()
+        axs[0].plot(
+            idx, obs_array[idx, 3], markers[i_action], 
+            label=labels[i_action], color=colors[i_action],
+            markersize=4
+        )  # Plot on Close
+
 
     # Plot Immediate Rewards
-    axs[3].set_xlabel('Time Steps')
-    axs[3].set_ylabel('Immediate Reward', color='cyan')
-    axs[3].plot(reward_array, label='Immediate Reward', color='cyan')
-    axs[3].tick_params(axis='y', labelcolor='cyan')
+    axs[2].set_xlabel('Time Steps')
+    axs[2].set_ylabel('Immediate Reward', color='cyan')
+    axs[2].plot(reward_array, label='Immediate Reward', color='cyan')
+    axs[2].tick_params(axis='y', labelcolor='cyan')
 
     # Create a second y-axis for Cumulative Reward
-    ax2 = axs[3].twinx()
+    ax2 = axs[2].twinx()
     ax2.set_ylabel('Realized PNL Rate', color='magenta')
     ax2.plot(realized_pnl_rate_array, label='Realized PNL Rate', color='magenta')
     ax2.tick_params(axis='y', labelcolor='magenta')
 
-    axs[3].set_title('Rewards / Realized PNL Rate')
+    axs[2].set_title('Rewards / Realized PNL Rate')
 
     for ax in axs:
         ax.grid()

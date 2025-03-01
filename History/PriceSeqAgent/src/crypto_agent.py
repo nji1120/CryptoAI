@@ -41,6 +41,7 @@ class CryptoAgent:
 
         elif action==Action.CLOSE: # 決済
             realized_pnl_rate=self.__calculate_pnl_rate(price_close) # 確定利益率
+            # print(self.__holdings, "close: ",price_close, "pnl: ",realized_pnl_rate)
             self.cumlative_realized_pnl_rate+=realized_pnl_rate # 確定利益率の累計
             self.__holdings={} # holdを空にする
 
