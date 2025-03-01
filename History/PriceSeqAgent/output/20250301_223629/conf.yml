@@ -1,9 +1,9 @@
 T: 30
 sequence_length: 30
 alpha_realized: 1
-alpha_unrealized: 0
+alpha_unrealized: 0.2
 beta_reward: 1
-total_timesteps: 30000
+total_timesteps: 3000000
 model_name: crypto_ppo
 n_env: 10
 data:
