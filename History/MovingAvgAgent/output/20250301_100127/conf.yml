@@ -1,0 +1,12 @@
+# 報酬を0にしたほぼランダムなモデル
+T: 60
+moving_avg_windows:
+- 5
+- 15
+- 30
+alpha_realized: 1
+alpha_unrealized: 1
+beta_reward: 0
+total_timesteps: 300
+model_name: crypto_ppo
+n_env: 1
