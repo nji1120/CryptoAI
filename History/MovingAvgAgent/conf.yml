@@ -1,8 +1,8 @@
-T: 60
-moving_avg_windows: [5,15,30]
-alpha_realized: 1
-alpha_unrealized: 0
-beta_reward: 1
-total_timesteps: 3000000
-model_name: crypto_ppo
-n_env: 25
+T: 60 # エピソードの長さ
+moving_avg_windows: [5,15,30] # 移動平均のwindow
+alpha_realized: 1 # 確定利益率の重み
+alpha_unrealized: 0 # 含み益の重み
+beta_reward: 1 # 報酬全体の係数
+total_timesteps: 3000000 # 学習の総ステップ数
+model_name: crypto_ppo # 保存するモデルの名前
+n_env: 25 # 並列環境の数
