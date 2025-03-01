@@ -33,7 +33,7 @@ def main():
         yaml.dump(conf, f, sort_keys=False, indent=4)
 
     T=conf["T"]
-    moving_avg_windows=conf["moving_avg_windows"]
+    sequence_length=conf["sequence_length"]
     alpha_realized=conf["alpha_realized"]
     alpha_unrealized=conf["alpha_unrealized"]
     beta_reward=conf["beta_reward"]
@@ -45,12 +45,12 @@ def main():
     def make_env():
         env=CryptoEnv(
             T=T,
-            moving_avg_windows=moving_avg_windows,
+            sequence_length=sequence_length,
             alpha_realized=alpha_realized,
             alpha_unrealized=alpha_unrealized,
             beta_reward=beta_reward,
             agent=agent,
-            datapath="data/train.csv"
+            datapath=PARENT/"data"/conf["data"]["train"]
         )
         env=Monitor(env, filename=None, allow_early_resets=True) #これでevalが出る
         return env
@@ -73,16 +73,15 @@ def main():
     # -- モデルのテスト --
     env=CryptoEnv(
         T=T,
-        moving_avg_windows=moving_avg_windows,
+        sequence_length=sequence_length,
         alpha_realized=alpha_realized,
         alpha_unrealized=alpha_unrealized,
         beta_reward=beta_reward,
         agent=agent,
-        datapath="data/train.csv"
+        datapath=PARENT/"data"/conf["data"]["train"]
     )
-    # vec_env=DummyVecEnv([make_env])
     model = PPO.load(model_name)
-    test_env(env, model, n_test=50, save_path=result_path)
+    test_env(env, model, n_test=25, save_path=result_path)
 
 
 if __name__ == "__main__":

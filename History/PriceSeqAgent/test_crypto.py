@@ -24,13 +24,10 @@ def test_env(env:CryptoEnv, policy:PPO, n_test:int=1, save_path:Path=None):
         obs,_=env.reset()
         done=False
         while not done:
-            # action_dist=policy.policy.get_distribution(obs)
-            # log_prob=action_dist.log_prob(torch.tensor([]))
-            # print(f"log_prob: {log_prob}")
             action, _states=policy.predict(obs, deterministic=False)
             action_history.append(
-                # env.agent.actual_action(action).value
-                action
+                env.agent.actual_action(action).value
+                # action
             )
             obs, reward, done,_,info=env.step(action)
 

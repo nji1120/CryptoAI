@@ -1,0 +1,13 @@
+T: 30 # エピソードの長さ
+sequence_length: 30 # シーケンスの長さ
+alpha_realized: 1 # 確定利益率の重み
+alpha_unrealized: 0 # 含み益の重み
+beta_reward: 1 # 報酬全体の係数
+total_timesteps: 30000 # 学習の総ステップ数
+model_name: crypto_ppo # 保存するモデルの名前
+n_env: 10 # 並列環境の数
+
+data:
+  train: train_short.csv
+  test: train_short.csv
+
