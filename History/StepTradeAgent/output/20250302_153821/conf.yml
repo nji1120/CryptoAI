@@ -8,3 +8,8 @@ n_env: 50
 data:
     train: train.csv
     test: btcjpy/ohlcv.csv
+interval: 1d
+fsym: BTC
+tsym: USD
+train_from: 2017-08-17 09:00:00
+train_to: 2024-11-15 09:00:00

@@ -1,0 +1,13 @@
+trade_term: 30
+sequence_length: 30
+total_timesteps: 5000000
+model_name: crypto_ppo
+n_env: 50
+data:
+    train: btcjpy/ohlcv.csv
+    test: test.csv
+interval: 1d
+fsym: BTC
+tsym: JPY
+train_from: 2014-12-31 09:00:00
+train_to: 2025-03-02 09:00:00

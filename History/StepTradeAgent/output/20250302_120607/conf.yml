@@ -1,4 +1,5 @@
-T: 30
+# 1千万学習させたモデル
+trade_term: 30
 sequence_length: 30
 total_timesteps: 10000000
 model_name: crypto_ppo

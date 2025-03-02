@@ -1,3 +1,4 @@
+# 100万だけ学習させたモデル
 T: 30
 sequence_length: 30
 total_timesteps: 1000000
