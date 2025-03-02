@@ -3,10 +3,25 @@ import os
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
+import torch
 from tqdm import tqdm
 import pandas as pd
 from stable_baselines3 import PPO
+from stable_baselines3.common.policies import obs_as_tensor
+
 from src.crypto_env import CryptoEnv
+
+
+def get_action_prob(policy:PPO, obs:np.ndarray):
+    """
+    policyのaction_probを返す
+    """
+    with torch.no_grad():
+        obs_tr=torch.Tensor(obs).unsqueeze(0).to(policy.policy.device)
+        distribute=policy.policy.get_distribution(obs_tr)
+        probs_tr=distribute.distribution.probs
+        probs=probs_tr.detach().cpu().numpy()
+    return probs
 
 
 def test_env(env:CryptoEnv, policy:PPO, n_test:int=1, save_path:Path=None):
@@ -19,6 +34,7 @@ def test_env(env:CryptoEnv, policy:PPO, n_test:int=1, save_path:Path=None):
         obs_history=[]
         reward_history=[]
         action_history=[]
+        action_prob_history=[]
         realized_pnl_rate_history=[] # 累積確定利益率
 
         obs,_=env.reset()
@@ -28,8 +44,12 @@ def test_env(env:CryptoEnv, policy:PPO, n_test:int=1, save_path:Path=None):
             action_history.append(
                 action
             )
+
+            action_prob=get_action_prob(policy, obs)[0]
+            action_prob_history.append(action_prob)
+
             current_price=env.get_current_data() #現stepのprice (このopenのみactorに渡されている)
-            _, reward, done,_,info=env.step(action)
+            obs, reward, done,_,info=env.step(action)
 
             obs_history.append(
                 current_price.values.flatten()
@@ -50,7 +70,7 @@ def test_env(env:CryptoEnv, policy:PPO, n_test:int=1, save_path:Path=None):
         })
 
         visualize_history(
-            obs_history, action_history, 
+            obs_history, action_history, action_prob_history,
             reward_history, realized_pnl_rate_history, 
             save_path/"test_imgs", 
             filename=f"result_{i_test}.png"
@@ -64,7 +84,7 @@ def test_env(env:CryptoEnv, policy:PPO, n_test:int=1, save_path:Path=None):
 
 
 def visualize_history(
-        obs_history, action_history, 
+        obs_history, action_history, action_prob_history,
         reward_history, realized_pnl_rate_history, 
         save_path:Path=None, filename:str="test.png"
     ):
@@ -72,9 +92,10 @@ def visualize_history(
     obs_array = np.array(obs_history)
     reward_array = np.array(reward_history)
     realized_pnl_rate_array = np.array(realized_pnl_rate_history)
+    action_prob_array = np.array(action_prob_history)
 
     # Plot OHLCV data
-    fig, axs=plt.subplots(3, 1, figsize=(6,6))
+    fig, axs=plt.subplots(4, 1, figsize=(6,8))
 
     # Plot Open, High, Low, Close
     axs[0].plot(obs_array[:, 0], label='Open', color='green', alpha=1)
@@ -104,19 +125,32 @@ def visualize_history(
         )  # Plot on Close
 
 
-    # Plot Immediate Rewards
+    # Plot action_prob as stacked bar chart
+    axs[2].set_title('Action Probability')
     axs[2].set_xlabel('Time Steps')
-    axs[2].set_ylabel('Immediate Reward', color='cyan')
-    axs[2].plot(reward_array, label='Immediate Reward', color='cyan')
-    axs[2].tick_params(axis='y', labelcolor='cyan')
+    axs[2].set_ylabel('Probability')
+
+    # LongとShortの確率をスタックして描画
+    long_probs = action_prob_array[:, 0]  # Longの確率
+    short_probs = action_prob_array[:, 1]  # Shortの確率
+    axs[2].bar(range(len(long_probs)), long_probs, label='Long', color='red', alpha=0.5)
+    axs[2].bar(range(len(short_probs)), short_probs, bottom=long_probs, label='Short', color='blue', alpha=0.5)
+
+    axs[2].legend()
+
+    # Plot Immediate Rewards
+    axs[3].set_xlabel('Time Steps')
+    axs[3].set_ylabel('Immediate Reward', color='cyan')
+    axs[3].plot(reward_array, label='Immediate Reward', color='cyan')
+    axs[3].tick_params(axis='y', labelcolor='cyan')
 
     # Create a second y-axis for Cumulative Reward
-    ax2 = axs[2].twinx()
+    ax2 = axs[3].twinx()
     ax2.set_ylabel('Realized PNL Rate', color='magenta')
     ax2.plot(realized_pnl_rate_array, label='Realized PNL Rate', color='magenta')
     ax2.tick_params(axis='y', labelcolor='magenta')
 
-    axs[2].set_title('Rewards / Realized PNL Rate')
+    axs[3].set_title('Rewards / Realized PNL Rate')
 
     for ax in axs:
         ax.grid()

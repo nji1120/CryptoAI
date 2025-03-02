@@ -23,10 +23,8 @@ class CryptoEnv(Env):
         super(CryptoEnv, self).__init__()
 
         self.action_space=spaces.Discrete(2) # 2つのアクション{LONG, SHORT}
-
-        """
-        ohlcv0, ohlcv1, ohlcv2, ... , ohlcv(N-1), open
-        """
+        
+        # ohlcv0, ohlcv1, ohlcv2, ... , ohlcv(N-1), open
         observation_space_size=5 * (sequence_length-1) + 1 # 今はopenの情報だけ使う
         self.observation_space=spaces.Box(low=-1000, high=1000, shape=(observation_space_size,), dtype=np.float32) 
 
@@ -74,8 +72,7 @@ class CryptoEnv(Env):
 
         price_open=current_data_norm["O"]
         price_close=current_data_norm["C"]
-        realized_pnl_rate=self.agent.act(action_idx, price_open, price_close)
-        reward=realized_pnl_rate # 報酬は即時利益率そのもの
+        reward=self.agent.act(action_idx, price_open, price_close) # 報酬は即時利益率そのもの
 
         observation=self.__get_observation()
 
@@ -139,7 +136,7 @@ class CryptoEnv(Env):
     
     def __get_past_max(self):
         """
-        過去Tstepの最大値を計算
+        過去Tstepの最大値をとる
         """
         past_df=self.original_df.iloc[self.current_idx-self.T:self.current_idx]
         past_max=past_df.max()

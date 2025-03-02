@@ -5,4 +5,4 @@ model_name: crypto_ppo
 n_env: 50
 data:
     train: train.csv
-    test: train.csv
+    test: test.csv
