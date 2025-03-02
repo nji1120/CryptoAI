@@ -69,7 +69,7 @@ def main():
         trade_term=trade_term,
         sequence_length=sequence_length,
         agent=agent,
-        datapath=PARENT/"data"/conf["data"]["train"]
+        datapath=PARENT/"data"/conf["data"]["test"]
     )
     model = PPO.load(model_name)
     test_env(env, model, n_test=25, save_path=result_path)

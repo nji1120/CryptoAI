@@ -1,0 +1,332 @@
+openapi: 3.0.0
+info:
+  title: TradeSystem API
+  version: 1.0.0
+  description: TradeSystem API
+  contact:
+    name: Your Name
+    email: your.email@example.com
+    url: https://example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Local server
+
+tags:
+  - name: Trades
+    description: Trade operations
+  - name: CryptoAI
+    description: Crypto AI operations
+
+paths:
+  /trades:
+    get:
+      summary: Get all trades
+      description: Retrieve a list of all trades.
+      tags:
+        - Trades
+      parameters:
+        - name: fsym
+          in: query
+          required: false
+          description: The symbol of the trade
+          schema:
+            type: string
+            example: "BTC"
+        - name: tsym
+          in: query
+          required: false
+          description: The symbol of the trade
+          schema:
+            type: string
+            example: "JPY"
+        - name: status
+          in: query
+          required: false
+          description: The status of the trade
+          schema:
+            type: string
+            example: "OPEN"
+      responses:
+        '200':
+          description: A list of trades
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Trade'
+
+  /trades/entry:
+    post:
+      summary: Create a new trade
+      description: Create a new trade entry.
+      tags:
+        - Trades
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fsym:
+                  type: string
+                  description: The symbol of the trade
+                  example: "BTC"
+                tsym:
+                  type: string
+                  description: The symbol of the trade
+                  example: "JPY"
+                amount:
+                  type: number
+                  description: The amount of the trade
+                  example: 0.001
+                position:
+                  type: string
+                  description: The position of the trade
+                  example: "LONG"
+                entry_price:
+                  type: number
+                  description: The entry price of the trade
+                  example: 100000
+                  
+      responses:
+        '201':
+          description: Trade created successfully
+        '400':
+          description: Invalid input
+
+  /trades/{tradeId}:
+    get:
+      summary: Get a specific trade
+      description: Retrieve a specific trade by its ID.
+      tags:
+        - Trades
+      parameters:
+        - name: tradeId
+          in: path
+          required: true
+          description: The ID of the trade to retrieve
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A trade object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trade'
+        '404':
+          description: Trade not found
+
+  /trades/exit:
+    post:
+      summary: Exit a trade
+      description: Exit a trade.
+      tags:
+        - Trades
+      parameters:
+        - name: tradeId
+          in: path
+          required: true
+          description: The ID of the trade to exit
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                exit_price:
+                  type: number
+                  description: The exit price of the trade
+                  example: 100000
+      responses:
+        '200':
+          description: Trade exited successfully
+        '404':
+          description: Trade not found
+
+
+  /cryptoAI/predict:
+    get:
+      summary: Predict the action probability of a crypto currency
+      description: Predict the action probability of a crypto currency.
+      tags:
+        - CryptoAI
+      parameters:
+        - name: model
+          in: query
+          required: true
+          description: The model name to predict the action probability
+          schema:
+            type: string
+            example: "model1"
+        - name: timestamp
+          in: query
+          required: false
+          description: The timestamp of the prediction. if not provided, the now timestamp will be used.
+          schema:
+            type: integer
+            example: 1740919473
+      responses:
+        '200':
+          description: |
+            The predicted action probability whether long or short.
+            The input sequence is the input of the model (latest OHLCV(=idx: -1) has only the open price).
+            Action probablities are when the latest open price is given.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  long_prob:
+                    type: number
+                    example: 0.8
+                  short_prob:
+                    type: number
+                    example: 0.2
+                  input_sequence:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OHLCV'
+
+  /cryptoAI/models:
+    get:
+      summary: Get all models
+      description: Get all models.
+      tags:
+        - CryptoAI
+      parameters:
+        - name: fsym
+          in: query
+          required: false
+          description: The symbol of the crypto currency
+          schema:
+            type: string
+            example: "BTC"
+        - name: tsym
+          in: query
+          required: false
+          description: The symbol of the trade
+          schema:
+            type: string
+            example: "JPY"
+        - name: interval
+          in: query
+          required: false
+          description: The interval of the model
+          schema:
+            type: string
+            example: "1d"
+
+      responses:
+        '200':
+          description: A list of models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Model'
+
+components:
+  schemas:
+    Trade:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "12345"
+        fsym:
+          type: string
+          example: "BTC"
+        tsym:
+          type: string
+          example: "JPY"
+        amount:
+          type: number
+          example: 0.001
+        position:
+          type: string
+          example: "LONG"
+        entry_price:
+          type: number
+          example: 100000
+        entry_time:
+          type: string
+          example: "2023-10-01T00:00:00Z"
+        exit_price:
+          type: number
+          example: 100000
+        exit_time:
+          type: string
+          example: "2023-10-01T00:00:00Z"
+        status:
+          type: string
+          description: The status of the trade (OPEN, CLOSE, CANCEL)
+          example: "CLOSE"
+
+    Model:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "model1"
+        fsym:
+          type: string
+          example: "BTC"
+        tsym:
+          type: string
+          example: "JPY"
+        interval:
+          type: string
+          example: "1d"
+          description: The interval of the model. 1d=1 day, 1h=1 hour, etc...
+        trade_term:
+          type: integer
+          example: 30
+          description: |
+            The trade term of the model. 
+            It depends on the interval of the model.
+            Ex) 30 & 1d -> 30 days, 60 & 1h -> 60 hours, etc...
+        train_from:
+          type: string
+          example: "2017-01-01T00:00:00Z"
+        train_to:
+          type: string
+          example: "2023-10-01T00:00:00Z"
+        input_sequence_length:
+          type: integer
+          example: 30
+          description: The length of the input sequence
+        description:
+          type: string
+          example: "This is a description of the model"
+
+    OHLCV:
+      type: object
+      properties:
+        open_time:
+          type: integer
+          example: 1740919473
+        open:
+          type: number
+          example: 100000
+        high:
+          type: number
+          example: 100000
+        low:
+          type: number
+          example: 100000
+        close:
+          type: number
+          example: 100000
+        volume:
+          type: number
+          example: 100000
+          
+

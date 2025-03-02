@@ -1,0 +1,9 @@
+# ほぼ未学習のランダムpolicy
+trade_term: 30
+sequence_length: 30
+total_timesteps: 100
+model_name: crypto_ppo
+n_env: 1
+data:
+    train: train.csv
+    test: btcjpy/ohlcv.csv

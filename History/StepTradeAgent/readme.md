@@ -12,5 +12,5 @@ PriceSeqAgentの学習より、時系列データを状態として入力する�
 - 入出力  
   入力は、前stepまでのsequence + 今のopenのみ
   今のopenとcloseを使ったら、そりゃあ勝てる  
-  今のopenだけで、どっちのpositionをとるか判断する必要がある
+  今のopenだけで、どっちのpositionをとるか判断する必要がある  
 
