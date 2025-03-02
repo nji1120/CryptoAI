@@ -10,11 +10,11 @@ class CryptoEnv(Env):
     毎stepトレードを行う環境 (=dayトレード)
     """
     def __init__(
-            self, T:int, sequence_length:int,
+            self, trade_term:int, sequence_length:int,
             agent: CryptoAgent, datapath:str
         ):
         """
-        :param T: 1epochの取引日数
+        :param trade_term: 1epochの取引日数
         :param sequence_length: シーケンスの長さ
         :param agent: agent
         :param datapath: データパス
@@ -29,7 +29,7 @@ class CryptoEnv(Env):
         self.observation_space=spaces.Box(low=-1000, high=1000, shape=(observation_space_size,), dtype=np.float32) 
 
         self.agent=agent #agent
-        self.T=T
+        self.trade_term=trade_term
         self.sequence_length=sequence_length
         self.original_df=self.__load_crypto_data(datapath)
 
@@ -70,13 +70,13 @@ class CryptoEnv(Env):
         current_data=self.get_current_data()
         current_data_norm=self.__normalize(current_data)
 
-        price_open=current_data_norm["O"]
-        price_close=current_data_norm["C"]
+        price_open=current_data_norm["open"]
+        price_close=current_data_norm["close"]
         reward=self.agent.act(action_idx, price_open, price_close) # 報酬は即時利益率そのもの
 
         observation=self.__get_observation()
 
-        done = ( self.current_idx >= self.start_idx+self.T ) # Tstep経過で終了
+        done = ( self.current_idx >= self.start_idx+self.trade_term ) # Tstep経過で終了
         info={}
 
         self.current_idx+=1
@@ -121,7 +121,7 @@ class CryptoEnv(Env):
         """
         暗号通貨のデータを読み込む
         """
-        columns=["O", "H", "L", "C", "volume"]
+        columns=["open", "high", "low", "close", "volume"]
         df=pd.read_csv(datapath)[columns]
         return df
 
@@ -130,15 +130,15 @@ class CryptoEnv(Env):
         """
         取引開始indexのランダム取得
         """
-        idx_max=len(self.original_df)-self.T
-        idx_min=self.T+1 # T分の過去は正規化データ取得に使うため
+        idx_max=len(self.original_df)-self.trade_term
+        idx_min=self.trade_term+1 # T分の過去は正規化データ取得に使うため
         return np.random.randint(idx_min, idx_max)
     
     def __get_past_max(self):
         """
         過去Tstepの最大値をとる
         """
-        past_df=self.original_df.iloc[self.current_idx-self.T:self.current_idx]
+        past_df=self.original_df.iloc[self.current_idx-self.trade_term:self.current_idx]
         past_max=past_df.max()
         return past_max
 

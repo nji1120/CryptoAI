@@ -32,7 +32,7 @@ def main():
     with open(result_path.parent/"conf.yml", "w", encoding="utf-8") as f:
         yaml.dump(conf, f, sort_keys=False, indent=4)
 
-    T=conf["T"]
+    trade_term=conf["trade_term"]
     sequence_length=conf["sequence_length"]
     total_timesteps=conf["total_timesteps"]
     model_name=str(result_path/conf["model_name"])
@@ -41,7 +41,7 @@ def main():
 
     def make_env():
         env=CryptoEnv(
-            T=T,
+            trade_term=trade_term,
             sequence_length=sequence_length,
             agent=agent,
             datapath=PARENT/"data"/conf["data"]["train"]
@@ -66,7 +66,7 @@ def main():
 
     # -- モデルのテスト --
     env=CryptoEnv(
-        T=T,
+        trade_term=trade_term,
         sequence_length=sequence_length,
         agent=agent,
         datapath=PARENT/"data"/conf["data"]["train"]
