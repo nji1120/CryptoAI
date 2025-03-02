@@ -1,0 +1,8 @@
+T: 30
+sequence_length: 30
+total_timesteps: 10000000
+model_name: crypto_ppo
+n_env: 50
+data:
+    train: train.csv
+    test: test.csv

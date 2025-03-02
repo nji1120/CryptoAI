@@ -1,8 +1,8 @@
 T: 30 # エピソードの長さ
 sequence_length: 30 # シーケンスの長さ
-total_timesteps: 10000 # 学習の総ステップ数
+total_timesteps: 1000000 # 学習の総ステップ数
 model_name: crypto_ppo # 保存するモデルの名前
-n_env: 10 # 並列環境の数
+n_env: 50 # 並列環境の数
 
 data:
   train: train.csv
