@@ -4,11 +4,11 @@ total_timesteps: 10000000
 model_name: crypto_ppo
 n_env: 50
 data:
-    train: /mnt/ssd1/hiranotakaya/master/CryptoAI/CryptoGetter/output/20250303_092433/ohlcv.csv
+    train: /mnt/ssd1/hiranotakaya/master/CryptoAI/CryptoGetter/output/20250303_092143/ohlcv.csv
     test: /mnt/ssd1/hiranotakaya/master/CryptoAI/CryptoGetter/output/20250303_091849/ohlcv.csv
 interval: 1d
 fsym: BTC
 tsym: JPY
-train_from: 2014/03/02 09:00:00
+train_from: 2021/03/02 09:00:00
 train_to: 2024/03/02 09:00:00
-description: 10年分のデータを学習
+description: 3年分のデータを学習

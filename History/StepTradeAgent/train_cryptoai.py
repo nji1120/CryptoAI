@@ -12,6 +12,10 @@ from src.crypto_env import CryptoEnv
 from src.crypto_agent import CryptoAgent
 from test_utils import test_env
 
+
+def is_full_path(path)-> bool:
+    return os.path.isabs(path)
+
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument("--train", action="store_true")
@@ -30,7 +34,7 @@ def main():
 
     # 設定ファイルのコピー
     with open(result_path.parent/"conf.yml", "w", encoding="utf-8") as f:
-        yaml.dump(conf, f, sort_keys=False, indent=4)
+        yaml.dump(conf, f, sort_keys=False, indent=4, allow_unicode=True)
 
     trade_term=conf["trade_term"]
     sequence_length=conf["sequence_length"]
@@ -39,6 +43,11 @@ def main():
     n_env=conf["n_env"]
 
 
+    if is_full_path(conf["data"]["train"]):
+        data_path=conf["data"]["train"]
+    else:
+        data_path=PARENT/"data"/conf["data"]["train"]
+
     def make_env():
         env=CryptoEnv(
             trade_term=trade_term,
@@ -46,7 +55,11 @@ def main():
             agent=agent,
             datapath=PARENT/"data"/conf["data"]["train"]
         )
-        env=Monitor(env, filename=None, allow_early_resets=True) #これでevalが出る
+        env=Monitor(
+            env, 
+            filename=str(result_path/"log"), 
+            allow_early_resets=True
+        ) #これでevalが出る
         return env
 
 
@@ -65,11 +78,15 @@ def main():
 
 
     # -- モデルのテスト --
+    if is_full_path(conf["data"]["test"]):
+        datapath=conf["data"]["test"]
+    else:
+        datapath=PARENT/"data"/conf["data"]["test"]
     env=CryptoEnv(
         trade_term=trade_term,
         sequence_length=sequence_length,
         agent=agent,
-        datapath=PARENT/"data"/conf["data"]["test"]
+        datapath=datapath
     )
     model = PPO.load(model_name)
     test_env(env, model, n_test=25, save_path=result_path)
