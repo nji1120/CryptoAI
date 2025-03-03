@@ -15,7 +15,7 @@ def main():
     agent=CryptoAgent()
 
     env=CryptoEnv(
-        T=10,
+        trade_term=10,
         sequence_length=5,
         agent=agent,
         datapath=str(ROOT/"data/train.csv")

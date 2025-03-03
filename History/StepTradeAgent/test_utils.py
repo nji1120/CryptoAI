@@ -59,6 +59,10 @@ def test_env(env:CryptoEnv, policy:PPO, n_test:int=1, save_path:Path=None):
                 env.agent.cumlative_realized_pnl_rate
             )
 
+        if env.agent.cumlative_realized_pnl_rate>1:
+            print(f"\n!!!!! i:{i_test} PnL% {env.agent.cumlative_realized_pnl_rate} !!!!!")
+            print(obs)
+
         results.append({
             "i": i_test,
             "r_mean": np.mean(reward_history),

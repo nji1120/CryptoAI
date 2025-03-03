@@ -35,7 +35,8 @@ class CryptoEnv(Env):
 
         self.start_idx:int
         self.current_idx:int
-        self.past_max:pd.Series
+        self.past_price_max:float
+        self.past_volume_max:float
 
 
     def reset(self, seed:int=None):
@@ -50,7 +51,7 @@ class CryptoEnv(Env):
         # 環境のリセット
         self.start_idx=self.__get_start_idx()
         self.current_idx=self.start_idx
-        self.past_max=self.__get_past_max()
+        self.past_price_max, self.past_volume_max=self.__get_past_max()
 
         # 初期observationの取得
         observation=self.__get_observation()
@@ -108,6 +109,7 @@ class CryptoEnv(Env):
         def log_obs():
             print("-"*50)
             print("step:",self.current_idx)
+            print("past_price_max:",self.past_price_max)
             print("current_data\n",current_data)
             print("sequence\n",sequence)
             print("sequence_norm\n",sequence_norm)
@@ -131,7 +133,7 @@ class CryptoEnv(Env):
         取引開始indexのランダム取得
         """
         idx_max=len(self.original_df)-self.trade_term
-        idx_min=self.trade_term+1 # T分の過去は正規化データ取得に使うため
+        idx_min=self.trade_term+1 if self.trade_term>self.sequence_length else self.sequence_length+1
         return np.random.randint(idx_min, idx_max)
     
     def __get_past_max(self):
@@ -139,14 +141,19 @@ class CryptoEnv(Env):
         過去Tstepの最大値をとる
         """
         past_df=self.original_df.iloc[self.current_idx-self.trade_term:self.current_idx]
-        past_max=past_df.max()
-        return past_max
+        past_price_max=np.max(past_df[["open", "high", "low", "close"]].values)
+        past_volume_max=np.max(past_df["volume"].values)
+        return past_price_max, past_volume_max
 
-    def __normalize(self, x:pd.Series) -> pd.Series:
+    def __normalize(self, x:pd.DataFrame) -> pd.DataFrame:
         """
         正規化
         """
-        return x/self.past_max
+        x_norm=x.copy()
+        x_norm[["open", "high", "low", "close"]]=x_norm[["open", "high", "low", "close"]]/self.past_price_max
+        x_norm["volume"]=x_norm["volume"]/self.past_volume_max
+
+        return x_norm
     
     def get_current_data(self):
         """
