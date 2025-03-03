@@ -1,0 +1,7 @@
+api: coindesk
+start_time: 2014/03/02
+end_time: 2024/03/02
+symbol: BTCJPY
+interval: 1d
+description: |
+    10年分の学習データ

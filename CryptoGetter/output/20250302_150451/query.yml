@@ -1,0 +1,5 @@
+api: binance
+start_time: 2015/01/01
+end_time: 2025/03/02
+symbol: BTCUSDT
+interval: 1d
