@@ -1,0 +1,27 @@
+train:
+    trade_term: 30
+    sequence_length: &sequence_length 5
+    total_timesteps: 100000
+    model_name: crypto_ppo
+    n_env: 1
+    datapath:
+        train: test.csv
+        test: test.csv
+
+model:
+    archi_type: lstm
+    network_kwargs:
+        input_sequence_length: *sequence_length
+        lstm_hidden_dim: 64
+        lstm_num_layers: 1
+        actor_dim: 64
+        critic_dim: 64
+
+data:
+    interval: 1d
+    fsym: BTC
+    tsym: JPY
+    train_from: 2014/03/02 09:00:00
+    train_to: 2024/03/02 09:00:00
+
+description: 10年分のデータを学習
