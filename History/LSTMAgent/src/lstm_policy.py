@@ -47,7 +47,7 @@ class LSTMNetwork(nn.Module):
         self.latent_dim_vf = critic_dim
 
         # LSTM
-        lstm_input_dim=int(feature_dim/DefaultHyperParams.ohlcv_size)
+        lstm_input_dim=DefaultHyperParams.ohlcv_size
         self.lstm = nn.LSTM(lstm_input_dim, lstm_hidden_dim, batch_first=True, num_layers=lstm_num_layers)
 
         # Policy network
@@ -92,10 +92,8 @@ class LSTMNetwork(nn.Module):
         """
         LSTMに通して最新の隠れ層の出力を取得する関数
         """
-
         batch_size=features.shape[0]
         features=features.reshape(batch_size, -1, DefaultHyperParams.ohlcv_size) # [batch, seq x OHLCV_SIZE] -> [batch, seq, OHLCV_SIZE]
-        
         h, _ = self.lstm(features)
         h_last=h[:, -1, :]
 

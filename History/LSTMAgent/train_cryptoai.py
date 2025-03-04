@@ -95,7 +95,7 @@ def main():
         datapath=datapath
     )
     model = PPO.load(model_name)
-    test_env(env, model, n_test=5, save_path=result_path)
+    test_env(env, model, n_test=50, save_path=result_path)
 
 
 if __name__ == "__main__":
