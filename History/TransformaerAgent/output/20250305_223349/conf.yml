@@ -1,0 +1,34 @@
+train:
+    trade_term: 30
+    sequence_length: &sequence_length 30
+    total_timesteps: 5000000
+    model_name: crypto_ppo
+    n_env: 50
+    datapath:
+        train: /mnt/ssd1/hiranotakaya/master/CryptoAI/CryptoGetter/output/20250303_092200/ohlcv.csv
+        test: /mnt/ssd1/hiranotakaya/master/CryptoAI/CryptoGetter/output/20250303_091849/ohlcv.csv
+
+model:
+    archi_type: transformer # {transformer}
+    network_kwargs:
+        input_sequence_length: *sequence_length
+        transformer_hidden_dim: 512
+        transformer_n_heads: 8
+        transformer_n_layers: 4
+        actor_dim: 256
+        actor_num_layers: 2
+        critic_dim: 256
+        critic_num_layers: 2
+
+data:
+    interval: 1d
+    fsym: BTC
+    tsym: JPY
+    train_from: 2019/03/02 09:00:00
+    train_to: 2024/03/02 09:00:00
+
+description: |
+    5年分のデータを学習. 
+    observationの現在のopenのみデータをなくした.  
+    なぜなら, 前stepのopenとcloseは同じ値だから. 
+    また, open以外の値を0パディングすると, 重みが意味なくなる気がするから. 

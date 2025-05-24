@@ -21,4 +21,4 @@ data:
     tsym: JPY
     train_from: 2014/03/02 09:00:00
     train_to: 2024/03/02 09:00:00
-description: 10年分のデータを学習
+description: LSTMpolicyのテスト用

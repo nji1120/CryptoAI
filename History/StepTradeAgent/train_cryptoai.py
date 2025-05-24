@@ -32,32 +32,37 @@ def main():
     with open(conf_path, "r", encoding="utf-8") as f:
         conf=yaml.safe_load(f)
 
-    # 設定ファイルのコピー
+
+    # コメントごとconfのコピー
+    with open(conf_path, "r", encoding="utf-8") as f:
+        conf_txt=f.readlines() #コメントごと全部コピー
     with open(result_path.parent/"conf.yml", "w", encoding="utf-8") as f:
-        yaml.dump(conf, f, sort_keys=False, indent=4, allow_unicode=True)
-
-    trade_term=conf["trade_term"]
-    sequence_length=conf["sequence_length"]
-    total_timesteps=conf["total_timesteps"]
-    model_name=str(result_path/conf["model_name"])
-    n_env=conf["n_env"]
+        f.writelines(conf_txt) #コメントごと全部ペースト
 
 
-    if is_full_path(conf["data"]["train"]):
-        data_path=conf["data"]["train"]
+    train_conf, model_conf=conf["train"], conf["model"]
+    trade_term=train_conf["trade_term"]
+    sequence_length=train_conf["sequence_length"]
+    total_timesteps=train_conf["total_timesteps"]
+    model_name=str(result_path/train_conf["model_name"])
+    n_env=train_conf["n_env"]
+
+
+    if is_full_path(train_conf["datapath"]["train"]):
+        data_path=train_conf["datapath"]["train"]
     else:
-        data_path=PARENT/"data"/conf["data"]["train"]
+        data_path=PARENT/"data"/train_conf["datapath"]["train"]
 
     def make_env():
         env=CryptoEnv(
             trade_term=trade_term,
             sequence_length=sequence_length,
             agent=agent,
-            datapath=PARENT/"data"/conf["data"]["train"]
+            datapath=data_path
         )
         env=Monitor(
             env, 
-            filename=str(result_path/"log"), 
+            filename=None, 
             allow_early_resets=True
         ) #これでevalが出る
         return env
@@ -70,7 +75,7 @@ def main():
 
         # Parallel environments        
         vec_env=DummyVecEnv([make_env for _ in range(n_env)])
-        model = PPO(MlpPolicy, vec_env, verbose=1)
+        model = PPO(MlpPolicy, vec_env, verbose=1,tensorboard_log=str(result_path/"log"))
         model.learn(total_timesteps=total_timesteps,progress_bar=True)
         model.save(model_name)
 
@@ -78,10 +83,10 @@ def main():
 
 
     # -- モデルのテスト --
-    if is_full_path(conf["data"]["test"]):
-        datapath=conf["data"]["test"]
+    if is_full_path(train_conf["datapath"]["test"]):
+        datapath=train_conf["datapath"]["test"]
     else:
-        datapath=PARENT/"data"/conf["data"]["test"]
+        datapath=PARENT/"data"/train_conf["datapath"]["test"]
     env=CryptoEnv(
         trade_term=trade_term,
         sequence_length=sequence_length,

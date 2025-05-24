@@ -1,0 +1,26 @@
+train:
+    trade_term: 30
+    sequence_length: 30
+    total_timesteps: 100000
+    model_name: crypto_ppo
+    n_env: 5
+    datapath:
+        train: /mnt/ssd1/hiranotakaya/master/CryptoAI/CryptoGetter/output/20250303_092200/ohlcv.csv
+        test: /mnt/ssd1/hiranotakaya/master/CryptoAI/CryptoGetter/output/20250303_091849/ohlcv.csv
+model:
+    archi_type: seqbidlstm
+    network_kwargs:
+        input_sequence_length: 30
+        lstm_hidden_dim: 5
+        lstm_num_layers: 1
+        actor_dim: 128
+        actor_num_layers: 2
+        critic_dim: 128
+        critic_num_layers: 2
+data:
+    interval: 1d
+    fsym: BTC
+    tsym: JPY
+    train_from: 2014/03/02 09:00:00
+    train_to: 2024/03/02 09:00:00
+description: "5年分のデータを学習. \nSeqBidLSTMPolicyで学習テスト"

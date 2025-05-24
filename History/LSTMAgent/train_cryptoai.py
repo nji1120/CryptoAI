@@ -4,6 +4,7 @@ PARENT=Path(__file__).parent
 import os
 import datetime
 import yaml
+from typing import Callable
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import DummyVecEnv, Monitor
 
@@ -11,7 +12,16 @@ from src.crypto_env import CryptoEnv
 from src.crypto_agent import CryptoAgent
 from test_utils import test_env
 from src.lstm_policy import LSTMNetworkPolicy
+from src.sequence_bid_lstm_policy import SeqBidLSTMNetworkPolicy
 
+
+def get_policy_class(archi_type:str)->Callable:
+    if archi_type.casefold()=="lstm":
+        return LSTMNetworkPolicy
+    elif archi_type.casefold()=="seqbidlstm":
+        return SeqBidLSTMNetworkPolicy
+    else:
+        raise ValueError(f"Invalid architecture type: {archi_type}")
 
 def is_full_path(path)-> bool:
     return os.path.isabs(path)
@@ -32,9 +42,12 @@ def main():
     with open(conf_path, "r", encoding="utf-8") as f:
         conf=yaml.safe_load(f)
 
-    # 設定ファイルのコピー
+
+    # コメントごとconfのコピー
+    with open(conf_path, "r", encoding="utf-8") as f:
+        conf_txt=f.readlines() #コメントごと全部コピー
     with open(result_path.parent/"conf.yml", "w", encoding="utf-8") as f:
-        yaml.dump(conf, f, sort_keys=False, indent=4, allow_unicode=True)
+        f.writelines(conf_txt) #コメントごと全部ペースト
 
 
     train_conf, model_conf=conf["train"], conf["model"]
@@ -72,8 +85,10 @@ def main():
 
         # Parallel environments        
         vec_env=DummyVecEnv([make_env for _ in range(n_env)])
+        archi_type=model_conf["archi_type"]
+        policy_class=get_policy_class(archi_type)
         model = PPO(
-            LSTMNetworkPolicy, vec_env, verbose=1, 
+            policy_class, vec_env, verbose=1, 
             policy_kwargs=model_conf,
             tensorboard_log=str(result_path/"log")
         )

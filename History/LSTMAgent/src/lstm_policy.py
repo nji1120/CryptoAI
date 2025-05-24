@@ -20,7 +20,9 @@ class DefaultHyperParams:
     lstm_hidden_dim:int=64
     lstm_num_layers:int=1
     actor_dim:int=64
+    actor_num_layers:int=1
     critic_dim:int=64
+    critic_num_layers:int=1
 
 
 class LSTMNetwork(nn.Module):
@@ -37,7 +39,9 @@ class LSTMNetwork(nn.Module):
         lstm_hidden_dim: int = DefaultHyperParams.lstm_hidden_dim, # LSTMの隠れ層のユニット数
         lstm_num_layers: int = DefaultHyperParams.lstm_num_layers, # LSTMの層数
         actor_dim: int = DefaultHyperParams.actor_dim,
+        actor_num_layers: int = DefaultHyperParams.actor_num_layers,
         critic_dim: int = DefaultHyperParams.critic_dim,
+        critic_num_layers: int = DefaultHyperParams.critic_num_layers,
     ):
         super().__init__()
 
@@ -51,15 +55,24 @@ class LSTMNetwork(nn.Module):
         self.lstm = nn.LSTM(lstm_input_dim, lstm_hidden_dim, batch_first=True, num_layers=lstm_num_layers)
 
         # Policy network
-        self.policy_net = nn.Sequential(
-            nn.Linear(lstm_hidden_dim, actor_dim), 
-            nn.ReLU() # actionはどうせsoftmaxかけるのでReLUでいい
-        )
+        policy_layers=[]
+        for i in range(actor_num_layers):
+            in_dim=lstm_hidden_dim if i==0 else actor_dim
+            policy_layers+=[
+                nn.Linear(in_dim, actor_dim),
+                nn.Tanh()
+            ]
+        self.policy_net = nn.Sequential(*policy_layers)
+
         # Value network
-        self.value_net = nn.Sequential(
-            nn.Linear(lstm_hidden_dim, critic_dim), 
-            nn.Tanh() # rewardはその時の利益率なので-1~1にする
-        )
+        value_layers=[]
+        for i in range(critic_num_layers):
+            in_dim=lstm_hidden_dim if i==0 else critic_dim
+            value_layers+=[
+                nn.Linear(in_dim, critic_dim),
+                nn.Tanh()
+            ]
+        self.value_net = nn.Sequential(*value_layers)
 
         def log_model_summary():
             bar_num=25
@@ -147,12 +160,15 @@ class LSTMNetworkPolicy(ActorCriticPolicy):
         lstm_hidden_dim=self.network_kwargs.get("lstm_hidden_dim",DefaultHyperParams.lstm_hidden_dim)
         lstm_num_layers=self.network_kwargs.get("lstm_num_layers",DefaultHyperParams.lstm_num_layers)
         actor_dim=self.network_kwargs.get("actor_dim",DefaultHyperParams.actor_dim)
+        actor_num_layers=self.network_kwargs.get("actor_num_layers",DefaultHyperParams.actor_num_layers)
         critic_dim=self.network_kwargs.get("critic_dim",DefaultHyperParams.critic_dim)
+        critic_num_layers=self.network_kwargs.get("critic_num_layers",DefaultHyperParams.critic_num_layers)
 
         self.mlp_extractor = LSTMNetwork(
             self.features_dim, 
             lstm_hidden_dim=lstm_hidden_dim, lstm_num_layers=lstm_num_layers, 
-            actor_dim=actor_dim, critic_dim=critic_dim
+            actor_dim=actor_dim, actor_num_layers=actor_num_layers,
+            critic_dim=critic_dim, critic_num_layers=critic_num_layers
         )
 
 

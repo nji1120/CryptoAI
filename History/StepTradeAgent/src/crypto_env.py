@@ -11,21 +11,24 @@ class CryptoEnv(Env):
     """
     def __init__(
             self, trade_term:int, sequence_length:int,
-            agent: CryptoAgent, datapath:str
+            agent: CryptoAgent, datapath:str, 
+            is_test_log:bool=False
         ):
         """
         :param trade_term: 1epochの取引日数
         :param sequence_length: シーケンスの長さ
         :param agent: agent
         :param datapath: データパス
+        :param is_test_log: テストログを出力するかどうか(コードのテスト用)
         """
 
         super(CryptoEnv, self).__init__()
 
         self.action_space=spaces.Discrete(2) # 2つのアクション{LONG, SHORT}
         
-        # ohlcv0, ohlcv1, ohlcv2, ... , ohlcv(N-1), open
-        observation_space_size=5 * (sequence_length-1) + 1 # 今はopenの情報だけ使う
+        # 今はopenの情報だけ使う. 未来のhigh, low, close, volumeは0で埋める
+        # ohlcv0, ohlcv1, ohlcv2, ... , ohlcv(N-1), open, 0, 0, 0
+        observation_space_size=5 * sequence_length
         self.observation_space=spaces.Box(low=-1000, high=1000, shape=(observation_space_size,), dtype=np.float32) 
 
         self.agent=agent #agent
@@ -38,6 +41,7 @@ class CryptoEnv(Env):
         self.past_price_max:float
         self.past_volume_max:float
 
+        self.is_test_log=is_test_log
 
     def reset(self, seed:int=None):
         """
@@ -96,7 +100,8 @@ class CryptoEnv(Env):
     def __get_observation(self):
         """
         観察の取得.
-        return: o,h,l,c,v, mv1_o,mv1_h,mv1_l,mv1_c,mv1_v,, ... , open_n
+        LSTM内でreshapeする
+        return: ohlcv0, ohlcv1, ohlcv2, ... , ohlcv(N-1), open, 0, 0, 0
         """
 
         current_data=self.get_current_data()
@@ -104,8 +109,12 @@ class CryptoEnv(Env):
         sequence=pd.concat([past_sequence, current_data.to_frame().T]) #現在のohlcvまでのシーケンス
         sequence_norm=self.__normalize(sequence)
 
-        observation=sequence_norm.values.flatten()[:-4] #現在のopen以外は捨てる
+        observation=sequence_norm.values
+        observation[-1, 1:]=[0,0,0,0] # 未来のhigh, low, close, volumeは0で埋める
+        observation=observation.flatten()
 
+
+        # -- コードのテスト用 ---
         def log_obs():
             print("-"*50)
             print("step:",self.current_idx)
@@ -114,7 +123,8 @@ class CryptoEnv(Env):
             print("sequence\n",sequence)
             print("sequence_norm\n",sequence_norm)
             print("observation\n",observation, "\nshape:",observation.shape)
-        # log_obs()
+        if self.is_test_log: log_obs()
+        # -- コードのテスト用 ---
 
         return observation.astype(np.float32)
         
@@ -141,8 +151,8 @@ class CryptoEnv(Env):
         過去Tstepの最大値をとる
         """
         past_df=self.original_df.iloc[self.current_idx-self.trade_term:self.current_idx]
-        past_price_max=np.max(past_df[["open", "high", "low", "close"]].values)
-        past_volume_max=np.max(past_df["volume"].values)
+        past_price_max=np.max(past_df[["open", "high", "low", "close"]].values) #過去price(open, high, low, close全て)の最大値
+        past_volume_max=np.max(past_df["volume"].values) #過去volumeの最大値
         return past_price_max, past_volume_max
 
     def __normalize(self, x:pd.DataFrame) -> pd.DataFrame:
@@ -150,8 +160,8 @@ class CryptoEnv(Env):
         正規化
         """
         x_norm=x.copy()
-        x_norm[["open", "high", "low", "close"]]=x_norm[["open", "high", "low", "close"]]/self.past_price_max
-        x_norm["volume"]=x_norm["volume"]/self.past_volume_max
+        x_norm[["open", "high", "low", "close"]]=x_norm[["open", "high", "low", "close"]]/self.past_price_max # priceは同じmaxで割る
+        x_norm["volume"]=x_norm["volume"]/self.past_volume_max # volumeは過去のvolumeの最大値で割る
 
         return x_norm
     
