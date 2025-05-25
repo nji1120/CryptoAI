@@ -1,0 +1,35 @@
+train:
+    trade_term: 30
+    t_past: &t_past 30 # 入力データの長さ
+    t_future: 15 # 利益確定までの日数
+    total_timesteps: 500000
+    model_name: crypto_ppo
+    n_env: 10
+    datapath:
+        train: /root/dev/projects/CryptoAI/CryptoGetter/output/20250303_092200/ohlcv.csv
+        test: /root/dev/projects/CryptoAI/CryptoGetter/output/20250303_091849/ohlcv.csv
+    log_name: cls_transformer_p05
+
+model:
+    archi_type: cls_transformer 
+    network_kwargs:
+        input_sequence_length: *t_past
+        transformer_hidden_dim: 512
+        transformer_n_heads: 8
+        transformer_n_layers: 4
+        actor_dim: 256
+        actor_num_layers: 2
+        critic_dim: 256
+        critic_num_layers: 2
+
+data:
+    interval: 1d
+    fsym: BTC
+    tsym: JPY
+    train_from: 2019/03/02 09:00:00
+    train_to: 2024/03/02 09:00:00
+
+description: |
+    5年分のデータを学習.
+    clsトークンを追加したtransformerモデル.
+    p=t_future/t_past=0.5のモデル

@@ -7,16 +7,17 @@ from .crypto_agent import CryptoAgent
 class CryptoEnv(Env):
     """
     crypto取引の環境.
-    毎stepトレードを行う環境 (=dayトレード)
+    Nstep後に利益が確定するenv
     """
     def __init__(
-            self, trade_term:int, sequence_length:int,
+            self, trade_term:int, t_past:int, t_future:int,
             agent: CryptoAgent, datapath:str, 
             is_test_log:bool=False
         ):
         """
         :param trade_term: 1epochの取引日数
-        :param sequence_length: シーケンスの長さ
+        :param t_past: 入力データの長さ
+        :param t_future: t_future日後に利益が確定する (そこでpositionをcloseする)
         :param agent: agent
         :param datapath: データパス
         :param is_test_log: テストログを出力するかどうか(コードのテスト用)
@@ -28,12 +29,13 @@ class CryptoEnv(Env):
         
         # 今はopenの情報だけ使う. 未来のhigh, low, close, volumeは0で埋める
         # ohlcv0, ohlcv1, ohlcv2, ... , ohlcv(N-1), open, 0, 0, 0
-        observation_space_size=5 * sequence_length
+        observation_space_size=5 * t_past
         self.observation_space=spaces.Box(low=-1000, high=1000, shape=(observation_space_size,), dtype=np.float32) 
 
         self.agent=agent #agent
         self.trade_term=trade_term
-        self.sequence_length=sequence_length
+        self.t_past=t_past
+        self.t_future=t_future
         self.original_df=self.__load_crypto_data(datapath)
 
         self.start_idx:int
@@ -65,6 +67,9 @@ class CryptoEnv(Env):
 
     def step(self, action_idx:int):
         """
+        その日の利益率は, その日のopenとt_future日後のcloseで計算.
+        実環境では不可能だが, 学習時はt_future日後のcloseを取得できるとする.
+
         :param action_idx: policy nnからの出力. 既にindexになっている
         :return observation: 観察
         :return reward: 報酬
@@ -75,9 +80,12 @@ class CryptoEnv(Env):
         current_data=self.get_current_data()
         current_data_norm=self.__normalize(current_data)
 
-        price_open=current_data_norm["open"]
-        price_close=current_data_norm["close"]
-        reward=self.agent.act(action_idx, price_open, price_close) # 報酬は即時利益率そのもの
+        future_data=self.__get_future_data()
+        future_data_norm=self.__normalize(future_data)
+
+        price_open=current_data_norm["open"] #今のopen
+        price_close=future_data_norm["close"] #t_future日後のclose
+        reward=self.agent.act(action_idx, price_open, price_close) # 報酬は未来の利益率
 
         observation=self.__get_observation()
 
@@ -93,7 +101,7 @@ class CryptoEnv(Env):
         """
         過去のシーケンスを取得
         """
-        past_df=self.original_df.iloc[self.current_idx-self.sequence_length:self.current_idx]
+        past_df=self.original_df.iloc[self.current_idx-self.t_past:self.current_idx]
         return past_df
     
 
@@ -110,7 +118,7 @@ class CryptoEnv(Env):
         sequence_norm=self.__normalize(past_sequence)
 
         observation=sequence_norm.values
-        observation=observation.flatten()
+        observation=observation.flatten() # stablebaselineの実装上11次元しか受け付けてない. 向こうでreshapeする
 
 
         # -- コードのテスト用 ---
@@ -141,13 +149,13 @@ class CryptoEnv(Env):
         """
         取引開始indexのランダム取得
         """
-        idx_max=len(self.original_df)-self.trade_term
-        idx_min=self.trade_term+1 if self.trade_term>self.sequence_length else self.sequence_length+1
+        idx_max=len(self.original_df)-(self.trade_term+self.t_future+1) #+1は一応してる
+        idx_min=self.trade_term+1 if self.trade_term>self.t_past else self.t_past+1
         return np.random.randint(idx_min, idx_max)
     
     def __get_past_max(self):
         """
-        過去Tstepの最大値をとる
+        過去のtrade_term期間の最大値をとる
         """
         past_df=self.original_df.iloc[self.current_idx-self.trade_term:self.current_idx]
         past_price_max=np.max(past_df[["open", "high", "low", "close"]].values) #過去price(open, high, low, close全て)の最大値
@@ -169,3 +177,17 @@ class CryptoEnv(Env):
         現在のデータを取得
         """
         return self.original_df.iloc[self.current_idx]
+
+    def __get_future_data(self):
+        """
+        t_future日後のデータを取得する
+        """
+        return self.original_df.iloc[self.current_idx+self.t_future]
+    
+    def debug_future_nrm_data(self):
+        """
+        デバッグ用のfutureデータを正規化して返す
+        """
+        future_data=self.__get_future_data()
+        future_data_norm=self.__normalize(future_data)
+        return future_data_norm

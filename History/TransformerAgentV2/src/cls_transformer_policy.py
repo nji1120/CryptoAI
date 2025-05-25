@@ -92,7 +92,7 @@ class ClsTransformerNetwork(nn.Module):
             header_msg="*"*bar_num+" model summary " +"*"*bar_num
             print("\033[32m"+header_msg+"\033[0m")
             print(f"feature_extractor: {self.transformer}")
-            print(f"cls_token: {self.cls_token}")
+            print(f"cls_token shape: {self.cls_token.shape}")
             print(f"policy_net: {self.policy_net}")
             print(f"value_net: {self.value_net}")
 

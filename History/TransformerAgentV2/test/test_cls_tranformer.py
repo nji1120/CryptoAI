@@ -19,7 +19,7 @@ def main():
     def make_env():
         env=CryptoEnv(
             trade_term=10,
-            sequence_length=6,
+            t_past=6,
             agent=agent,
             datapath=str(ROOT/"data/test.csv")
         )
