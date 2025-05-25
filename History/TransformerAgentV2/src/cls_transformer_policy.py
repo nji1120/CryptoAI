@@ -24,6 +24,7 @@ class ClsTransformerNetwork(nn.Module):
     def __init__(
         self,
         feature_dim: int,
+        transformer_feed_forward_dim: int = DefaultHyperParams.transformer_feed_forward_dim,
         transformer_hidden_dim: int = DefaultHyperParams.transformer_hidden_dim,
         transformer_n_heads: int = DefaultHyperParams.transformer_n_heads,
         transformer_n_layers: int = DefaultHyperParams.transformer_n_layers,
@@ -60,7 +61,8 @@ class ClsTransformerNetwork(nn.Module):
         self.transformer = nn.TransformerEncoder(
             nn.TransformerEncoderLayer(
                 transformer_hidden_dim, transformer_n_heads,
-                batch_first=True
+                batch_first=True,
+                dim_feedforward=transformer_feed_forward_dim
             ),
             num_layers=transformer_n_layers
         )
@@ -188,6 +190,7 @@ class ClsTransformerNetworkPolicy(ActorCriticPolicy):
     def _build_mlp_extractor(self) -> None:
 
         transformer_hidden_dim=self.network_kwargs.get("transformer_hidden_dim",DefaultHyperParams.transformer_hidden_dim)
+        transformer_feed_forward_dim=self.network_kwargs.get("transformer_feed_forward_dim",DefaultHyperParams.transformer_feed_forward_dim)
         transformer_n_heads=self.network_kwargs.get("transformer_n_heads",DefaultHyperParams.transformer_n_heads)
         transformer_n_layers=self.network_kwargs.get("transformer_n_layers",DefaultHyperParams.transformer_n_layers)
         actor_dim=self.network_kwargs.get("actor_dim",DefaultHyperParams.actor_dim)
@@ -197,7 +200,8 @@ class ClsTransformerNetworkPolicy(ActorCriticPolicy):
 
         self.mlp_extractor = ClsTransformerNetwork(
             self.features_dim, 
-            transformer_hidden_dim=transformer_hidden_dim, transformer_n_heads=transformer_n_heads, transformer_n_layers=transformer_n_layers, 
+            transformer_feed_forward_dim=transformer_feed_forward_dim, transformer_hidden_dim=transformer_hidden_dim, 
+            transformer_n_heads=transformer_n_heads, transformer_n_layers=transformer_n_layers, 
             actor_dim=actor_dim, actor_num_layers=actor_num_layers,
             critic_dim=critic_dim, critic_num_layers=critic_num_layers
         )

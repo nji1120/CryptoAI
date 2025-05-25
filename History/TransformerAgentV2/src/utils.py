@@ -18,6 +18,7 @@ class DefaultHyperParams:
     Policyのハイパーパラメータのデフォルト値
     """
     in_feature_dim:int=5
+    transformer_feed_forward_dim:int=2048
     transformer_hidden_dim:int=512
     transformer_n_heads:int=8
     transformer_n_layers:int=6

@@ -49,10 +49,11 @@ def test_env(env:CryptoEnv, policy:PPO, n_test:int=1, save_path:Path=None):
             action_prob_history.append(action_prob)
 
             current_price=env.get_current_data() #現stepのprice (このopenのみactorに渡されている)
+            future_price=env.original_df.iloc[env.current_idx+env.t_future]["close"] # 未来のcloseデータ
             obs, reward, done,_,info=env.step(action)
 
             obs_history.append(
-                current_price.values.flatten()
+                np.concatenate([current_price.values.flatten(), [future_price]])
             )
             reward_history.append(reward)
             realized_pnl_rate_history.append(
@@ -106,6 +107,7 @@ def visualize_history(
     axs[0].plot(obs_array[:, 1], label='High', color='blue', alpha=0.2)
     axs[0].plot(obs_array[:, 2], label='Low', color='red', alpha=0.2)
     axs[0].plot(obs_array[:, 3], label='Close', color='orange', alpha=1)
+    axs[0].plot(obs_array[:, 5], label='Future', color='purple', alpha=1, linestyle='--')
     axs[0].set_title('OHLC Data')
     axs[0].set_ylabel('Price')
     axs[0].legend()

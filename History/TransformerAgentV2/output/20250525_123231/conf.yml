@@ -4,22 +4,24 @@ train:
     t_future: 15 # 利益確定までの日数
     total_timesteps: 500000
     model_name: crypto_ppo
-    n_env: 10
-    datapath:
-        train: C:\Users\3meko\Dev\CryptoAI\CryptoGetter\output\20250303_092200\ohlcv.csv
-        test: C:\Users\3meko\Dev\CryptoAI\CryptoGetter\output\20250303_091849\ohlcv.csv
+    n_env: 3
+    datapath: # CryptoAIより下のパスを書く
+        train: CryptoGetter/output/20250303_092200/ohlcv.csv
+        test: CryptoGetter/output/20250303_091849/ohlcv.csv
     log_name: cls_transformer_p05
-
+    save_freq: 100000 #保存interval step数
+    n_test: 15 #テスト時の並列env数
 model:
     archi_type: cls_transformer 
     network_kwargs:
         input_sequence_length: *t_past
-        transformer_hidden_dim: 512
+        transformer_hidden_dim: 128
+        transformer_feed_forward_dim: 256
         transformer_n_heads: 8
         transformer_n_layers: 4
-        actor_dim: 256
+        actor_dim: 128
         actor_num_layers: 2
-        critic_dim: 256
+        critic_dim: 128
         critic_num_layers: 2
 
 data:
@@ -30,7 +32,7 @@ data:
     train_to: 2024/03/02 09:00:00
 
 description: |
-    純windowsで学習して速度を見てみる.
+    transformerのLinear層のノード数を小さくした(feed_forward_dim=256, default=2048).
     5年分のデータを学習.
     clsトークンを追加したtransformerモデル.
     p=t_future/t_past=0.5のモデル

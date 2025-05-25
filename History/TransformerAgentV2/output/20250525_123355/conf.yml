@@ -1,14 +1,14 @@
 train:
     trade_term: 30
     t_past: &t_past 30 # 入力データの長さ
-    t_future: 30 # 利益確定までの日数
+    t_future: 3 # 利益確定までの日数
     total_timesteps: 500000
     model_name: crypto_ppo
     n_env: 3
     datapath: # CryptoAIより下のパスを書く
         train: CryptoGetter/output/20250303_092200/ohlcv.csv
         test: CryptoGetter/output/20250303_091849/ohlcv.csv
-    log_name: cls_transformer_p1
+    log_name: cls_transformer_p01
     save_freq: 100000 #保存interval step数
     n_test: 15 #テスト時の並列env数
 model:
@@ -35,4 +35,4 @@ description: |
     transformerのLinear層のノード数を小さくした(feed_forward_dim=256, default=2048).
     5年分のデータを学習.
     clsトークンを追加したtransformerモデル.
-    p=t_future/t_past=1のモデル
+    p=t_future/t_past=0.1のモデル
