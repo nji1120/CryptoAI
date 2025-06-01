@@ -114,13 +114,20 @@ def main():
         return env
     
 
+    # -- モデルのテスト --
+    if is_full_path(train_conf["datapath"]["test"]):
+        test_datapath=train_conf["datapath"]["test"]
+    else:
+        test_datapath=ROOT/train_conf["datapath"]["test"]
+
+
     def make_test_env(): # monitorなしのtest_env
         env=CryptoEnv(
             trade_term=trade_term,
             t_past=t_past,
             t_future=t_future,
             agent=agent,
-            datapath=data_path
+            datapath=test_datapath
         )
         return env
 
@@ -159,19 +166,8 @@ def main():
 
 
     # -- モデルのテスト --
-    if is_full_path(train_conf["datapath"]["test"]):
-        datapath=train_conf["datapath"]["test"]
-    else:
-        datapath=ROOT/train_conf["datapath"]["test"]
-    env=CryptoEnv(
-        trade_term=trade_term,
-        t_past=t_past,
-        t_future=t_future,
-        agent=agent,
-        datapath=datapath
-    )
     model = PPO.load(model_name)
-    test_env(env, model, n_test=50, save_path=result_path)
+    test_env(make_test_env(), model, n_test=50, save_path=result_path)
 
 
 if __name__ == "__main__":

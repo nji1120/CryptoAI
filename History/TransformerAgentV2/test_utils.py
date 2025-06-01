@@ -1,5 +1,4 @@
 import os
-
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
@@ -100,6 +99,7 @@ def visualize_history(
     action_prob_array = np.array(action_prob_history)
 
     # Plot OHLCV data
+    axs:list[plt.Axes]=[]
     fig, axs=plt.subplots(4, 1, figsize=(6,8))
 
     # Plot Open, High, Low, Close
@@ -141,6 +141,8 @@ def visualize_history(
     short_probs = action_prob_array[:, 1]  # Shortの確率
     axs[2].bar(range(len(long_probs)), long_probs, label='Long', color='red', alpha=0.5)
     axs[2].bar(range(len(short_probs)), short_probs, bottom=long_probs, label='Short', color='blue', alpha=0.5)
+    axs[2].hlines(0.75, 0, len(long_probs), color='gray', linestyle='--', linewidth=1)
+    axs[2].hlines(0.25, 0, len(long_probs), color='gray', linestyle='--', linewidth=1)
 
     axs[2].legend()
 

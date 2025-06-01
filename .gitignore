@@ -1,5 +1,6 @@
 *.zip
-*.png
+result*.png 
 __pycache__
 crypto-env
 *.sh
+*.pptx
