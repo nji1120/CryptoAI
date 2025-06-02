@@ -1,5 +1,6 @@
 *.zip
 result*.png 
+test*.png
 __pycache__
 crypto-env
 *.sh

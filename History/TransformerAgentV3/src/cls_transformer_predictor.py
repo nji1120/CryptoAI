@@ -17,7 +17,7 @@ class ClsTransformerPredictor(nn.Module):
     def __init__(
         self,
         sequence_length: int,
-        transformer_feed_forward_dim: int = DefaultHyperParams.transformer_feed_forward_dim,
+        transformer_feedforward_dim: int = DefaultHyperParams.transformer_feed_forward_dim,
         transformer_hidden_dim: int = DefaultHyperParams.transformer_hidden_dim,
         transformer_n_heads: int = DefaultHyperParams.transformer_n_heads,
         transformer_n_layers: int = DefaultHyperParams.transformer_n_layers,
@@ -48,30 +48,38 @@ class ClsTransformerPredictor(nn.Module):
             nn.TransformerEncoderLayer(
                 transformer_hidden_dim, transformer_n_heads,
                 batch_first=True,
-                dim_feedforward=transformer_feed_forward_dim
+                dim_feedforward=transformer_feedforward_dim
             ),
             num_layers=transformer_n_layers
         )
         
-        # 出力層 : clsトークンの特徴量を受け取る
+        # 出力層 : clsトークンの特徴量を受け取る. 平均とlog分散を出力する
+        self.mu_layer=self.__create_output_layer(
+            transformer_hidden_dim, output_n_layers, output_hidden_dim, output_dim
+        )
+        self.logvar_layer=self.__create_output_layer(
+            transformer_hidden_dim, output_n_layers, output_hidden_dim, output_dim
+        )
+
+    
+    def __create_output_layer(self, input_dim: int, output_n_layers: int, output_hidden_dim: int, output_dim: int):
         output_layers=[]
         for i in range(output_n_layers):
-            in_dim=transformer_hidden_dim if i==0 else output_hidden_dim
+            in_dim=input_dim if i==0 else output_hidden_dim
             output_layers+=[
                 nn.Linear(in_dim, output_hidden_dim),
-                nn.ReLU()
+                nn.LeakyReLU()
             ]
         output_layers+=[
             nn.Linear(output_hidden_dim, output_dim),
-            nn.ReLU()
         ]
-        self.output_layer=nn.Sequential(*output_layers)
-
+        return nn.Sequential(*output_layers)
 
 
     def forward(self, x: th.Tensor) -> th.Tensor:
         """
         :param x: [batch x sequence x feature_dim]
+        :return: out_mu: [batch x output_dim], out_logvar: [batch x output_dim]
         """
 
         # 入力をtransformerの入力次元に合わせる (埋め込みに近い)
@@ -93,9 +101,10 @@ class ClsTransformerPredictor(nn.Module):
         h_cls=h[:, 0, :] # [batch x transformer_hidden_dim]
 
         # 出力層に通す
-        out=self.output_layer(h_cls) # [batch x output_dim]
+        out_mu=self.mu_layer(h_cls) # [batch x output_dim]
+        out_logvar=self.logvar_layer(h_cls) # [batch x output_dim]
 
-        return out
+        return out_mu, out_logvar
         
         
         

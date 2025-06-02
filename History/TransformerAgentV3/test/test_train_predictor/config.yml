@@ -1,0 +1,29 @@
+train:
+  model_name: predictor
+  datapath: # CryptoAIより下のパスを書く
+      train: History/TransformerAgentV3/data/test.csv
+      test: History/TransformerAgentV3/data/test.csv
+  log_name: test
+  save_interval: 10000
+  total_timesteps: 500000
+  batch_size: 128
+  learning_rate: 0.001
+
+model:
+  input_params:
+    feature_dim: &feature_dim 5
+    t_past: &t_past 30 # 入力データの長さ
+    t_future: 9 # 利益確定までの日数
+
+  transformer:
+    hidden_dim: 128
+    feedforward_dim: 256 # transformer内部のlinearの次元数
+    n_heads: 8
+    n_layers: 4
+
+  out_layer:
+    hidden_dim: 64
+    n_layers: 2
+    out_dim: *feature_dim
+    
+    
