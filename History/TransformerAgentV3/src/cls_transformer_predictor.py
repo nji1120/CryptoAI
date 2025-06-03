@@ -21,6 +21,7 @@ class ClsTransformerPredictor(nn.Module):
         transformer_hidden_dim: int = DefaultHyperParams.transformer_hidden_dim,
         transformer_n_heads: int = DefaultHyperParams.transformer_n_heads,
         transformer_n_layers: int = DefaultHyperParams.transformer_n_layers,
+        transformer_dropout: float = 0.1,
         output_n_layers: int = 2,
         output_hidden_dim: int = 256,
         output_dim: int = 2,
@@ -48,7 +49,8 @@ class ClsTransformerPredictor(nn.Module):
             nn.TransformerEncoderLayer(
                 transformer_hidden_dim, transformer_n_heads,
                 batch_first=True,
-                dim_feedforward=transformer_feedforward_dim
+                dim_feedforward=transformer_feedforward_dim,
+                dropout=transformer_dropout
             ),
             num_layers=transformer_n_layers
         )

@@ -1,0 +1,29 @@
+train:
+  model_name: predictor
+  datapath: # CryptoAIより下のパスを書く
+      train: CryptoGetter/output/20250303_092200/ohlcv.csv
+      test: CryptoGetter/output/20250303_091849/ohlcv.csv
+  log_name: test
+  save_interval: 50
+  total_epochs: 300
+  batch_size: 128
+  learning_rate: 0.001
+
+model:
+  input_params:
+    feature_dim: &feature_dim 5
+    t_past: &t_past 30 # 入力データの長さ
+    t_future: 10 # 利益確定までの日数
+
+  transformer:
+    hidden_dim: 128
+    feedforward_dim: 256 # transformer内部のlinearの次元数
+    n_heads: 8
+    n_layers: 4
+    dropout: 0.3
+  out_layer:
+    hidden_dim: 64
+    n_layers: 2
+    out_dim: *feature_dim
+    
+    

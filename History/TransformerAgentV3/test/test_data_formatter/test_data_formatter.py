@@ -25,6 +25,8 @@ def main():
 
     data_formatter=DataFormatter()
     formatted_data=data_formatter.get_formatted_data(t_past=t_past, t_future=t_future, data=data)
+    print(formatted_data)
+    formatted_data["label"]+=formatted_data["input"][-len(formatted_data["label"]):]
 
     line_width=3
     axes:list[plt.Axes]

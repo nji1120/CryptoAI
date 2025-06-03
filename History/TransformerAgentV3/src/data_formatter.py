@@ -76,6 +76,7 @@ class DataFormatter():
         future_data=np.zeros_like(data)
         t_end=data.shape[0]-t_future-1
         for t in range(0, t_end, 1):
-            future_data[t]=data[t+t_future, :]
+            # future_data[t]=data[t+t_future, :] #値データそのまま格納
+            future_data[t]=data[t+t_future, :]-data[t, :] #差分データを格納
 
         return future_data
