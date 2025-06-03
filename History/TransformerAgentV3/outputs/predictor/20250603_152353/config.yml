@@ -1,11 +1,11 @@
 train:
   model_name: predictor
   datapath: # CryptoAIより下のパスを書く
-      train: CryptoGetter/output/20250303_092200/ohlcv.csv
-      test: CryptoGetter/output/20250303_091849/ohlcv.csv
+      train: CryptoGetter/output/20250303_091849/ohlcv.csv
+      test: History/TransformerAgentV3/data/test.csv
   log_name: test
-  save_interval: 25
-  total_epochs: 100
+  save_interval: 50
+  total_epochs: 500
   batch_size: 128
   learning_rate: 0.001
 

@@ -36,7 +36,6 @@ class DataFormatter():
         return dataset
         
 
-    
     def normalize(self, data:np.ndarray, norm_params:np.ndarray) -> np.ndarray:
         """
         正規化を行う

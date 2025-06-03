@@ -28,7 +28,7 @@ def main():
 
     line_width=3
     axes:list[plt.Axes]
-    fig,axes=plt.subplots(5,1, figsize=(10,10))
+    fig,axes=plt.subplots(5,1, figsize=(8,8))
     titles=["open", "high", "low", "close", "volume"]
     for i,ax in enumerate(axes):
         ax.plot(formatted_data["input"][:,i], label="current")
@@ -60,7 +60,7 @@ def main():
         )
 
         ax.set_title(titles[i])
-        ax.legend()
+        ax.legend(loc="upper right")
 
     fig.tight_layout()
 
