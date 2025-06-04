@@ -118,7 +118,7 @@ class CryptoEnv(Env):
         sequence_norm=self.__normalize(past_sequence)
 
         observation=sequence_norm.values
-        observation=observation.flatten() # stablebaselineの実装上11次元しか受け付けてない. 向こうでreshapeする
+        observation=observation.flatten() # stablebaselineの実装上1次元しか受け付けてない. 向こうでreshapeする
 
 
         # -- コードのテスト用 ---
