@@ -14,6 +14,42 @@ class ProbTransformer(nn.Module):
     Transformerで値を予測するモデル.
     予測は確率分布のPNN形式とする. (信頼度がほしいため)
     """
+    @classmethod
+    def from_config(cls, config: dict):
+        """
+        configを渡すと, インスタンスを自動生成してくれる.
+        config: dict
+            - model.input_params
+            - model.transformer
+            - model.out_layer
+        """
+        # 必要なパラメータをconfigから取得
+        sequence_length = config["transformer"]["sequence_length"]
+        input_feature_dim = config["transformer"]["feature_dim"]
+        future_time_dim = config["transformer"]["future_time_dim"]
+        transformer_feedforward_dim = config["transformer"]["feedforward_dim"]
+        transformer_hidden_dim = config["transformer"]["hidden_dim"]
+        transformer_n_heads = config["transformer"]["n_heads"]
+        transformer_n_layers = config["transformer"]["n_layers"]
+        transformer_dropout = config["transformer"]["dropout"]
+        output_n_layers = config["out_layer"]["n_layers"]
+        output_hidden_dim = config["out_layer"]["hidden_dim"]
+        output_dim = config["out_layer"]["out_dim"]
+
+        return cls(
+            sequence_length=sequence_length,
+            input_feature_dim=input_feature_dim,
+            future_time_dim=future_time_dim,
+            transformer_feedforward_dim=transformer_feedforward_dim,
+            transformer_hidden_dim=transformer_hidden_dim,
+            transformer_n_heads=transformer_n_heads,
+            transformer_n_layers=transformer_n_layers,
+            transformer_dropout=transformer_dropout,
+            output_n_layers=output_n_layers,
+            output_hidden_dim=output_hidden_dim,
+            output_dim=output_dim,
+        )
+    
     def __init__(
         self,
         sequence_length: int,
@@ -36,6 +72,7 @@ class ProbTransformer(nn.Module):
         super().__init__()
 
         self.future_time_dim=future_time_dim
+        self.output_dim=output_dim # policyの方で使うために残しておく
 
         cls_token_length=1
         self.positional_encoding:th.Tensor=create_positional_encoding(

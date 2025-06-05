@@ -10,14 +10,14 @@ class CryptoEnv(Env):
     Nstep後に利益が確定するenv
     """
     def __init__(
-            self, trade_term:int, t_past:int, t_future:int,
+            self, trade_term:int, s_past:int, s_future:int,
             agent: CryptoAgent, datapath:str, 
             is_test_log:bool=False
         ):
         """
         :param trade_term: 1epochの取引日数
-        :param t_past: 入力データの長さ
-        :param t_future: t_future日後に利益が確定する (そこでpositionをcloseする)
+        :param s_past: 入力データの長さ
+        :param s_future: s_future日後に利益が確定する (そこでpositionをcloseする)
         :param agent: agent
         :param datapath: データパス
         :param is_test_log: テストログを出力するかどうか(コードのテスト用)
@@ -29,19 +29,19 @@ class CryptoEnv(Env):
         
         # 今はopenの情報だけ使う. 未来のhigh, low, close, volumeは0で埋める
         # ohlcv0, ohlcv1, ohlcv2, ... , ohlcv(N-1), open, 0, 0, 0
-        observation_space_size=5 * t_past
+        observation_space_size=5 * s_past
         self.observation_space=spaces.Box(low=-1000, high=1000, shape=(observation_space_size,), dtype=np.float32) 
 
         self.agent=agent #agent
         self.trade_term=trade_term
-        self.t_past=t_past
-        self.t_future=t_future
+        self.s_past=s_past
+        self.s_future=s_future
         self.original_df=self.__load_crypto_data(datapath)
 
         self.start_idx:int
         self.current_idx:int
-        self.past_price_max:float
-        self.past_volume_max:float
+        self.past_price_mean:float
+        self.past_volume_mean:float
 
         self.is_test_log=is_test_log
 
@@ -57,7 +57,7 @@ class CryptoEnv(Env):
         # 環境のリセット
         self.start_idx=self.__get_start_idx()
         self.current_idx=self.start_idx
-        self.past_price_max, self.past_volume_max=self.__get_past_max()
+        self.past_price_mean, self.past_volume_mean=self.__get_past_mean()
 
         # 初期observationの取得
         observation=self.__get_observation()
@@ -86,6 +86,7 @@ class CryptoEnv(Env):
         price_open=current_data_norm["open"] #今のopen
         price_close=future_data_norm["close"] #t_future日後のclose
         reward=self.agent.act(action_idx, price_open, price_close) # 報酬は未来の利益率
+        reward=reward/self.s_future # 単位stepあたりの利益に正規化
 
         observation=self.__get_observation()
 
@@ -101,7 +102,7 @@ class CryptoEnv(Env):
         """
         過去のシーケンスを取得
         """
-        past_df=self.original_df.iloc[self.current_idx-self.t_past:self.current_idx]
+        past_df=self.original_df.iloc[self.current_idx-self.s_past:self.current_idx]
         return past_df
     
 
@@ -125,7 +126,7 @@ class CryptoEnv(Env):
         def log_obs():
             print("-"*50)
             print("step:",self.current_idx)
-            print("past_price_max:",self.past_price_max)
+            print("past_price_max:",self.past_price_mean)
             print("past_sequence\n",past_sequence)
             print("sequence_norm\n",sequence_norm)
             print("observation\n",observation, "\nshape:",observation.shape)
@@ -149,8 +150,8 @@ class CryptoEnv(Env):
         """
         取引開始indexのランダム取得
         """
-        idx_max=len(self.original_df)-(self.trade_term+self.t_future+1) #+1は一応してる
-        idx_min=self.trade_term+1 if self.trade_term>self.t_past else self.t_past+1
+        idx_max=len(self.original_df)-(self.trade_term+self.s_future+1) #+1は一応してる
+        idx_min=self.trade_term+1 if self.trade_term>self.s_past else self.s_past+1
         return np.random.randint(idx_min, idx_max)
     
     def __get_past_max(self):
@@ -161,14 +162,24 @@ class CryptoEnv(Env):
         past_price_max=np.max(past_df[["open", "high", "low", "close"]].values) #過去price(open, high, low, close全て)の最大値
         past_volume_max=np.max(past_df["volume"].values) #過去volumeの最大値
         return past_price_max, past_volume_max
+    
+    def __get_past_mean(self):
+        """
+        過去のtrade_term期間の平均値をとる
+        """
+        past_df=self.original_df.iloc[self.current_idx-self.trade_term:self.current_idx]
+        past_price_mean=np.mean(past_df[["open", "high", "low", "close"]].values) #過去price(open, high, low, close全て)の最大値
+        past_volume_mean=np.mean(past_df["volume"].values) #過去volumeの最大値
+        return past_price_mean, past_volume_mean
+
 
     def __normalize(self, x:pd.DataFrame) -> pd.DataFrame:
         """
         正規化
         """
         x_norm=x.copy()
-        x_norm[["open", "high", "low", "close"]]=x_norm[["open", "high", "low", "close"]]/self.past_price_max # priceは同じmaxで割る
-        x_norm["volume"]=x_norm["volume"]/self.past_volume_max # volumeは過去のvolumeの最大値で割る
+        x_norm[["open", "high", "low", "close"]]=x_norm[["open", "high", "low", "close"]]/self.past_price_mean # priceは同じmaxで割る
+        x_norm["volume"]=x_norm["volume"]/self.past_volume_mean # volumeは過去のvolumeの最大値で割る
 
         return x_norm
     
@@ -182,7 +193,7 @@ class CryptoEnv(Env):
         """
         t_future日後のデータを取得する
         """
-        return self.original_df.iloc[self.current_idx+self.t_future]
+        return self.original_df.iloc[self.current_idx+self.s_future]
     
     def debug_future_nrm_data(self):
         """

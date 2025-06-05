@@ -108,7 +108,7 @@ def main():
     model_conf=conf["model"]
     train_conf=conf["train"]
 
-    result_path=create_result_path(MODEL_ROOT/"outputs/",train_conf["model_name"])
+    result_path=create_result_path(MODEL_ROOT, "outputs")
     os.makedirs(result_path,exist_ok=True)
 
     with open(result_path/"config.yml","w",encoding="utf-8") as f:

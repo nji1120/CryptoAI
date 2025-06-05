@@ -1,0 +1,60 @@
+data:
+  fsym: BTC
+  interval: 1d
+  train_from: 2019/03/02 09:00:00
+  train_to: 2024/03/02 09:00:00
+  tsym: JPY
+description: 過去と未来の比率が1のモデル
+policy:
+  input_params:
+    feature_dim: 5
+  out_layer:
+    hidden_dim: 64
+    n_layers: 2
+  transformer:
+    dropout: 0.3
+    feedforward_dim: 256
+    hidden_dim: 128
+    n_heads: 8
+    n_layers: 4
+predictor:
+  confpath: History/TransformerAgentV3.1/predictor/outputs/20250604_224845/config.yml
+  description: "- lrを出力に対してO(10^-2)程度にする \n- 長めに学習してみる "
+  model:
+    input_params:
+      feature_dim: 5
+      s_future: 30
+      s_past: 30
+    out_layer:
+      hidden_dim: 64
+      n_layers: 2
+      out_dim: 5
+    transformer:
+      dropout: 0.3
+      feature_dim: 5
+      feedforward_dim: 256
+      future_time_dim: 30
+      hidden_dim: 128
+      n_heads: 8
+      n_layers: 4
+      sequence_length: 30
+  modelpath: History/TransformerAgentV3.1/predictor/outputs/20250604_224845/checkpoints/epoch_4999/model.pt
+  train:
+    batch_size: 128
+    datapath:
+      test: CryptoGetter/output/20250303_091849/ohlcv.csv
+      train: CryptoGetter/output/20250303_092200/ohlcv.csv
+    eval_num: 15
+    learning_rate: 0.001
+    log_name: test
+    loss_weight: 1
+    model_name: predictor
+    save_interval: 250
+    total_epochs: 5000
+train:
+  log_name: policy_p1
+  model_name: ppo_agent
+  n_env: 3
+  n_test: 15
+  save_freq: 100000
+  total_timesteps: 500000
